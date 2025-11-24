@@ -13,7 +13,7 @@ public class Book {
     private Shelf shelf;
     private LocalDate addedTime;
     private boolean isEnableBorrow;
-    private boolean isEnablePurchase;
+    // Removed purchase-related field
 
     public Book() {
     }
@@ -26,7 +26,7 @@ public class Book {
         this.shelf = shelf;
         this.addedTime = addedTime;
         this.isEnableBorrow = isEnableBorrow;
-        this.isEnablePurchase = isEnablePurchase;
+        // Removed purchase-related parameter
     }
 
     public String getTitle() {
@@ -57,9 +57,7 @@ public class Book {
         return isEnableBorrow;
     }
 
-    public boolean isEnablePurchase() {
-        return isEnablePurchase;
-    }
+    // Removed purchase-related getter
 
     public void setTitle(String title) {
         this.title = title;
@@ -93,9 +91,7 @@ public class Book {
         isEnableBorrow = enableBorrow;
     }
 
-    public void setEnablePurchase(boolean enablePurchase) {
-        isEnablePurchase = enablePurchase;
-    }
+    // Removed purchase-related setter
 
     @Override
     public String toString() {
@@ -107,19 +103,24 @@ public class Book {
                 ", shelf=" + shelf +
                 ", addedTime=" + addedTime +
                 ", isEnableBorrow=" + isEnableBorrow +
-                ", isEnablePurchase=" + isEnablePurchase +
+                "" +
                 '}';
     }
 
     @Override
+
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Book book = (Book) o;
-        return (bookId == book.bookId);
+        return bookId == book.bookId &&
+            Objects.equals(title, book.title) &&
+            Objects.equals(author, book.author) &&
+            type == book.type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(bookId);
+        return Objects.hash(bookId, title, author, type);
     }
 }
