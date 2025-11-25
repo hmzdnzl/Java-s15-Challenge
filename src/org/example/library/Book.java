@@ -18,7 +18,7 @@ public class Book {
     public Book() {
     }
 
-    public Book(String title, Type type, Author author, int bookId, Shelf shelf, LocalDate addedTime, boolean isEnableBorrow, boolean isEnablePurchase) {
+    public Book(String title, Type type, Author author, int bookId, Shelf shelf, LocalDate addedTime, boolean isEnableBorrow) {
         this.title = title;
         this.type = type;
         this.author = author;

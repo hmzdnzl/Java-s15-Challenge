@@ -2,12 +2,18 @@ package org.example.library;
 
 import java.util.Objects;
 
-public class Bookshelf{
+
+public class Bookshelf implements Comparable<Bookshelf> {
     private Shelf shelf;
 
-public Bookshelf(Shelf shelf) {
-    this.shelf=shelf;
-}
+    public Bookshelf(Shelf shelf) {
+        this.shelf = shelf;
+    }
+
+    @Override
+    public int compareTo(Bookshelf other) {
+        return Integer.compare(this.shelf.getShelfId(), other.shelf.getShelfId());
+    }
 
     public Shelf getShelf() {
         return shelf;

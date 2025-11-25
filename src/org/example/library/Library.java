@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Library {
     
@@ -27,6 +28,7 @@ private Map<Long, Member> members = new HashMap<>();
     private List<Author> authors = new ArrayList<>();
     private Map<Long, LibraryStuff> stuffs = new HashMap<>();
     private List<BorrowRecord> borrowRecords = new ArrayList<>();
+  private Map<Bookshelf, List<Book>> bookshelves = new TreeMap<>();
 
 
     private static Library instance;
@@ -43,7 +45,11 @@ private Map<Long, Member> members = new HashMap<>();
     if (books.containsKey(book.getBookId())) {
         throw new IllegalArgumentException("Bu ID'ye sahip bir kitap zaten var!");
     }
-    books.put(book.getBookId(), book);
+    books.put(book.getBookId(), book);  
+    Bookshelf bookshelf = new Bookshelf(book.getShelf());
+    bookshelves.putIfAbsent(bookshelf, new ArrayList<>());
+    bookshelves.get(bookshelf).add(book);
+    bookshelves.get(bookshelf).sort(java.util.Comparator.comparing(Book::getTitle));
 }
 
 public void donateBook(Book book, Member donor) {
@@ -56,6 +62,11 @@ public void donateBook(Book book, Member donor) {
     Member member = members.get(donor.getMemberId());
     books.put(book.getBookId(), book);
     member.getDonatedBooks().add(book);
+    
+    Bookshelf bookshelf = new Bookshelf(book.getShelf());
+    bookshelves.putIfAbsent(bookshelf, new ArrayList<>());
+    bookshelves.get(bookshelf).add(book);
+    bookshelves.get(bookshelf).sort(java.util.Comparator.comparing(Book::getTitle));
 }
 
     public void removeBook(int bookId) {
@@ -65,11 +76,12 @@ if (removed == null) {
 }
     }
 
-   public Book findBookById(Book book) {
-    if (!books.containsKey(book.getBookId())) {
-        throw new IllegalArgumentException(book.getBookId() + " id'li kitap kütüphanemizde bulunmamaktadır.");
+
+   public Book findBookById(int bookId) {
+    if (!books.containsKey(bookId)) {
+        throw new IllegalArgumentException(bookId + " id'li kitap kütüphanemizde bulunmamaktadır.");
     }
-    return books.get(book.getBookId());
+    return books.get(bookId);
 }
 
 public Book findBookByTitle(String title) {
@@ -105,6 +117,23 @@ public List<Book> findBooksByType(Type type) {
         throw new IllegalArgumentException(type + " türündeki kitaplar kütüphanemizde bulunmamaktadır.");
     }
     return foundBooks;
+}
+
+public List<Book> findBooksByShelf(Shelf shelf) {
+    Bookshelf bookshelf = new Bookshelf(shelf);
+    List<Book> foundBooks = bookshelves.get(bookshelf);
+        if (foundBooks == null || foundBooks.isEmpty()) {
+            throw new IllegalArgumentException("Raf numarası " + shelf.getShelfId() + " olan kitaplar kütüphanemizde bulunmamaktadır.");
+        }
+        // Kitapları durumuna göre yazdır
+        for (Book book : foundBooks) {
+            if (!book.isEnableBorrow()) {
+                System.out.println(book.getTitle() + " (Ödünç Verilmiştir)");
+            } else {
+                System.out.println(book.getTitle());
+            }
+        }
+        return foundBooks;
 }
 
 public void addMember(Member member) {
@@ -187,7 +216,9 @@ public void lendBook(int bookId, long memberId) {
     if (member.getBorrowedBooks().size() >= 5) {
         throw new IllegalArgumentException("Bir üye en fazla 5 kitap ödünç alabilir.");
     }
-    member.getBorrowedBooks().add(book);    
+    member.getBorrowedBooks().add(book);
+   
+    book.setEnableBorrow(false);
     java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
     BorrowRecord borrowRecord = new BorrowRecord(book, member, today, null);
     borrowRecords.add(borrowRecord);
@@ -206,7 +237,8 @@ public void returnBook(int bookId, long memberId) {
         throw new IllegalArgumentException("Üye bu kitabı ödünç almamış.");
     }
     member.getBorrowedBooks().remove(book);
- 
+    
+    book.setEnableBorrow(true);
     for (BorrowRecord record : borrowRecords) {
         if (record.getBook().equals(book) && record.getMember().equals(member) && record.getReturnDate() == null) {
             record.setReturnDate(new java.sql.Date(System.currentTimeMillis()));
