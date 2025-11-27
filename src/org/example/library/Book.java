@@ -57,8 +57,6 @@ public class Book {
         return isEnableBorrow;
     }
 
-    // Removed purchase-related getter
-
     public void setTitle(String title) {
         this.title = title;
     }
@@ -91,8 +89,6 @@ public class Book {
         isEnableBorrow = enableBorrow;
     }
 
-    // Removed purchase-related setter
-
     @Override
     public String toString() {
         return "Book{" +
@@ -113,14 +109,11 @@ public class Book {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Book book = (Book) o;
-        return bookId == book.bookId &&
-            Objects.equals(title, book.title) &&
-            Objects.equals(author, book.author) &&
-            type == book.type;
+        return bookId == book.bookId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(bookId, title, author, type);
+        return Objects.hash(bookId);
     }
 }

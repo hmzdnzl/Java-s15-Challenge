@@ -45,11 +45,18 @@ private Map<Long, Member> members = new HashMap<>();
     if (books.containsKey(book.getBookId())) {
         throw new IllegalArgumentException("Bu ID'ye sahip bir kitap zaten var!");
     }
-    books.put(book.getBookId(), book);  
+    books.put(book.getBookId(), book);
     Bookshelf bookshelf = new Bookshelf(book.getShelf());
-    bookshelves.putIfAbsent(bookshelf, new ArrayList<>());
-    bookshelves.get(bookshelf).add(book);
-    bookshelves.get(bookshelf).sort(java.util.Comparator.comparing(Book::getTitle));
+    List<Book> shelfBooks = bookshelves.get(bookshelf);
+    if (shelfBooks == null) {
+        shelfBooks = new ArrayList<>();
+        bookshelves.put(bookshelf, shelfBooks);
+    }
+    if (shelfBooks.size() >= 100) {
+        throw new IllegalArgumentException("Bu rafta en fazla 100 kitap olabilir!");
+    }
+    shelfBooks.add(book);
+    shelfBooks.sort(java.util.Comparator.comparing(Book::getTitle));
 }
 
 public void donateBook(Book book, Member donor) {
@@ -122,18 +129,10 @@ public List<Book> findBooksByType(Type type) {
 public List<Book> findBooksByShelf(Shelf shelf) {
     Bookshelf bookshelf = new Bookshelf(shelf);
     List<Book> foundBooks = bookshelves.get(bookshelf);
-        if (foundBooks == null || foundBooks.isEmpty()) {
-            throw new IllegalArgumentException("Raf numarası " + shelf.getShelfId() + " olan kitaplar kütüphanemizde bulunmamaktadır.");
-        }
-        // Kitapları durumuna göre yazdır
-        for (Book book : foundBooks) {
-            if (!book.isEnableBorrow()) {
-                System.out.println(book.getTitle() + " (Ödünç Verilmiştir)");
-            } else {
-                System.out.println(book.getTitle());
-            }
-        }
-        return foundBooks;
+    if (foundBooks == null || foundBooks.isEmpty()) {
+        throw new IllegalArgumentException("Raf numarası " + shelf.getShelfId() + " olan kitaplar kütüphanemizde bulunmamaktadır.");
+    }
+    return foundBooks;
 }
 
 public void addMember(Member member) {
@@ -164,13 +163,18 @@ public Member findMemberById(long memberId) {
     return members.get(memberId);
 }
 
-public Member findMemberByName(String name) {
+public List<Member> findMemberByName(String name) {
+    List<Member> foundMembers = new ArrayList<>();
+    String lowerName = name.toLowerCase();
     for (Member member : members.values()) {
-        if (member.getName().equalsIgnoreCase(name)) {
-            return member;
+        if (member.getName() != null && member.getName().toLowerCase().contains(lowerName)) {
+            foundMembers.add(member);
         }
     }
-    throw new IllegalArgumentException(name + " adlı üye kütüphanemizde bulunmamaktadır.");
+    if (foundMembers.isEmpty()) {
+        throw new IllegalArgumentException(name + " ifadesini içeren üye bulunamadı.");
+    }
+    return foundMembers;
 }
 
 public void addLibraryStuff(LibraryStuff stuffMember) {
@@ -187,13 +191,18 @@ public void removeLibraryStuff(LibraryStuff stuffMember) {
     stuffs.remove(stuffMember.getStuffId());
 }
 
-public LibraryStuff findLibraryStuffByName(String name) {
+public java.util.List<LibraryStuff> findLibraryStuffByName(String name) {
+    java.util.List<LibraryStuff> foundStaff = new java.util.ArrayList<>();
+    String lowerName = name.toLowerCase();
     for (LibraryStuff stuffMember : stuffs.values()) {
-        if (stuffMember.getName().equalsIgnoreCase(name)) {
-            return stuffMember;
+        if (stuffMember.getName() != null && stuffMember.getName().toLowerCase().contains(lowerName)) {
+            foundStaff.add(stuffMember);
         }
     }
-    throw new IllegalArgumentException(name + " adlı personel kütüphanemizde bulunmamaktadır.");
+    if (foundStaff.isEmpty()) {
+        throw new IllegalArgumentException(name + " ifadesini içeren personel bulunamadı.");
+    }
+    return foundStaff;
 }
 
 public LibraryStuff findLibraryStuffById(long stuffId) {
@@ -216,6 +225,10 @@ public void lendBook(int bookId, long memberId) {
     if (member.getBorrowedBooks().size() >= 5) {
         throw new IllegalArgumentException("Bir üye en fazla 5 kitap ödünç alabilir.");
     }
+
+    if (!book.isEnableBorrow()) {
+    throw new IllegalArgumentException("Bu kitap şu an ödünç alınamaz.");
+}
     member.getBorrowedBooks().add(book);
    
     book.setEnableBorrow(false);
@@ -330,10 +343,7 @@ public List<Book> listAllBooks() {
 
 public List<Member> listAllMembers() { 
     List<Member> allMembers = new ArrayList<>(members.values());
-    for (Member member : allMembers) {
-        System.out.println(member.getName()+", "+member.getEmail()+", "+member.getPhoneNumber());
-    }
-     return allMembers;
+    return allMembers;
 }
 
 public List<LibraryStuff> listAllLibraryStaff() { 

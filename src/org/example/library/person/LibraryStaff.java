@@ -3,13 +3,13 @@ package org.example.library.person;
 
 import java.util.Objects;
 
-public class LibraryStuff extends Person{
+public class LibraryStaff extends Person{
     private long stuffId;
-    public LibraryStuff() {
+    public LibraryStaff() {
 
     }
 
-    public LibraryStuff(long stuffId, String name, String address, String phoneNumber, String email, String role) {
+    public LibraryStaff(long stuffId, String name, String address, String phoneNumber, String email, String role) {
         super(name, address, phoneNumber, email, role);
         this.stuffId=stuffId;
     }
@@ -37,7 +37,7 @@ public class LibraryStuff extends Person{
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        LibraryStuff that = (LibraryStuff) o;
+        LibraryStaff that = (LibraryStaff) o;
         return stuffId == that.stuffId;
     }
 
